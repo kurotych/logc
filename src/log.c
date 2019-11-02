@@ -41,45 +41,65 @@ static const char* level_colors[] = {"\x1b[94m", "\x1b[36m", "\x1b[32m",
                                      "\x1b[33m", "\x1b[31m", "\x1b[35m"};
 #endif
 
-void log_multithreading(bool enable) {
-    pthread_mutex_lock(&mutex);
-    multitreading = enable;
-    pthread_mutex_unlock(&mutex);
-}
-
 int log_file_open(const char* file_path)
 {
+    if (fd != NULL)
+    {
+        fprintf(stderr, "The log file is already opened\n");
+        return -1;
+    }
+
     fd = fopen(file_path, "a");
     if (fd == NULL)
     {
         fprintf(stderr, "Can't open log file %s\n", file_path);
-        return -1;
+        return -2;
     }
     return 0;
 }
 
 int log_file_close()
 {
-    int ret = 0;
-    if (fd != NULL) {
-        ret = fclose(fd);
-        fd = NULL;
+    if (fd == NULL)
+    {
+        fprintf(stderr, "Log file already closed\n");
+        return -1;
     }
+
+    int ret = fclose(fd);
+    fd = NULL;
     return ret;
 }
 
-void log_level_set(int lvl) { level = lvl; }
+void log_multithreading(bool enable)
+{
+    pthread_mutex_lock(&mutex);
+    multitreading = enable;
+    pthread_mutex_unlock(&mutex);
+}
 
-void log_quiet_set(bool enable) { quiet = enable; }
+void log_level_set(int lvl)
+{
+    if (multitreading) pthread_mutex_lock(&mutex);
+    level = lvl;
+    if (multitreading) pthread_mutex_unlock(&mutex);
+}
+
+void log_quiet_set(bool enable)
+{
+    if (multitreading) pthread_mutex_lock(&mutex);
+    quiet = enable;
+    if (multitreading) pthread_mutex_unlock(&mutex);
+}
 
 void log_log(int lvl, const char* file, int line, const char* fmt, ...)
 {
+    if (multitreading) pthread_mutex_lock(&mutex);
+
     if (lvl < level)
     {
         return;
     }
-
-    if(multitreading) pthread_mutex_lock(&mutex);
 
     /* Get current time */
     time_t t = time(NULL);
@@ -92,8 +112,8 @@ void log_log(int lvl, const char* file, int line, const char* fmt, ...)
         char buf[16];
         buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
 #ifndef LOG_NO_USE_COLOR
-        fprintf(stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ", buf,
-                level_colors[lvl], level_names[lvl], file, line);
+        fprintf(stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ", buf, level_colors[lvl],
+                level_names[lvl], file, line);
 #else
         fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[lvl], file, line);
 #endif
@@ -118,5 +138,5 @@ void log_log(int lvl, const char* file, int line, const char* fmt, ...)
         fflush(fd);
     }
 
-    if(multitreading) pthread_mutex_unlock(&mutex);
+    if (multitreading) pthread_mutex_unlock(&mutex);
 }

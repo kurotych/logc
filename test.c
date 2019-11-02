@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define TEST_FILE_PATH "./test.txt"
+
 int count_lines(const char* file_path)
 {
     int lines = 0;
@@ -22,17 +24,16 @@ int count_lines(const char* file_path)
     return lines;
 }
 
-void file_write_test()
+void test_file_write()
 {
-    const char* file_path = "./test.txt";
     log_file_open("./test.txt");
     log_fatal("FATAL");
     log_trace("TRACE");
     log_file_close();
     log_fatal("FATAL");
 
-    int res = count_lines(file_path);
-    remove(file_path);
+    int res = count_lines(TEST_FILE_PATH);
+    remove(TEST_FILE_PATH);
     assert(res == 2);
 }
 
@@ -51,10 +52,9 @@ void* writer(void* arg)
     return NULL;
 }
 
-void concurrent_log_test()
+void concurrency_log_test()
 {
-    const char* file_path = "./test.txt";
-    log_file_open(file_path);
+    log_file_open(TEST_FILE_PATH);
     pthread_t thread1, thread2;
     int num0 = 0, num1 = 1;
 
@@ -65,17 +65,31 @@ void concurrent_log_test()
     pthread_join(thread2, NULL);
 
     log_file_close();
-    int res = count_lines(file_path);
-    remove(file_path);
+    int res = count_lines(TEST_FILE_PATH);
+    remove(TEST_FILE_PATH);
     assert(res == WRITER_REPEATS * 2);
 }
 
 void test_open_close()
 {
-    const char* file_path = "./test.txt";
-    log_file_open(file_path);
+    log_file_open(TEST_FILE_PATH);
     log_file_close();
 }
+
+void test_double_open()
+{
+    log_file_open(TEST_FILE_PATH);
+    assert(log_file_open(TEST_FILE_PATH) != 0);
+    log_file_close();
+}
+
+void test_double_close()
+{
+    log_file_open(TEST_FILE_PATH);
+    log_file_close(TEST_FILE_PATH);
+    assert(log_file_close() != 0);
+}
+
 int main()
 {
     log_level_set(LOG_TRACE);
@@ -87,8 +101,10 @@ int main()
     log_fatal("FATAL");
 
     test_open_close();
-    file_write_test();
-    concurrent_log_test();
+    test_file_write();
+    concurrency_log_test();
+    test_double_open();
+    test_double_close();
 
     log_info("All tests are passed");
 }

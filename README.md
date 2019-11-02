@@ -3,6 +3,7 @@ A simple logging library implemented in C99
 
 ## Fork of [log.c](https://github.com/rxi/log.c)
 ### Main changes
+- Fix concurrency vulnerabilities
 - Thread safe by default (The code should be compiled with -pthread flag)
 - Color print by default
 
