@@ -92,7 +92,7 @@ void test_double_close()
 
 int main()
 {
-    log_level_set(LOG_TRACE);
+    log_level_set(LOG_LEVEL_TRACE);
     log_trace("TRACE");
     log_debug("DEBUG");
     log_info("INFO");

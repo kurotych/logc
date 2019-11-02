@@ -28,7 +28,7 @@
 
 // Default settings
 static FILE* fd = NULL;
-static int level = LOG_DEBUG;
+static int level = LOG_LEVEL_DEBUG;
 static bool quiet = false;
 static bool multitreading = true;
 
