@@ -30,7 +30,7 @@ enum
 #define log_info(...) log_log(LOG_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
 #define log_warn(...) log_log(LOG_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
 #define log_error(...) log_log(LOG_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
-#define log_fatal(...) log_log(LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#define log_fatal(...) log_log(LOG_LEVEL_FATAL, __FILE__, __LINE__, __VA_ARGS__); abort();
 void log_log(int level, const char* file, int line, const char* fmt, ...);
 
 // open file stream

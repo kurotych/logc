@@ -5,6 +5,7 @@ A simple logging library implemented in C99
 ### Main changes
 - Fix concurrency vulnerabilities
 - Thread safe by default (The code should be compiled with -pthread flag)
+- Call abort() after fatal log
 - Color print by default
 
 ![screenshot](https://cloud.githubusercontent.com/assets/3920290/23831970/a2415e96-0723-11e7-9886-f8f5d2de60fe.png)

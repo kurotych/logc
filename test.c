@@ -27,10 +27,10 @@ int count_lines(const char* file_path)
 void test_file_write()
 {
     log_file_open("./test.txt");
-    log_fatal("FATAL");
+    log_error("ERROR");
     log_trace("TRACE");
     log_file_close();
-    log_fatal("FATAL");
+    log_error("ERROR");
 
     int res = count_lines(TEST_FILE_PATH);
     remove(TEST_FILE_PATH);
@@ -98,7 +98,6 @@ int main()
     log_info("INFO");
     log_warn("WARN");
     log_error("ERR");
-    log_fatal("FATAL");
 
     test_open_close();
     test_file_write();
