@@ -1,5 +1,5 @@
 # logc
-A simple logging library implemented in C99
+A simple thread safe logging library implemented in C99
 
 ## Fork of [log.c](https://github.com/rxi/log.c)
 ### Main changes
