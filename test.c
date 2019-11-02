@@ -52,7 +52,7 @@ void* writer(void* arg)
     return NULL;
 }
 
-void concurrency_log_test()
+void test_concurrency_log()
 {
     log_file_open(TEST_FILE_PATH);
     pthread_t thread1, thread2;
@@ -98,10 +98,12 @@ int main()
     log_info("INFO");
     log_warn("WARN");
     log_error("ERR");
+    log_trace(NULL);
+    log_debug("%s", NULL);
 
     test_open_close();
     test_file_write();
-    concurrency_log_test();
+    test_concurrency_log();
     test_double_open();
     test_double_close();
 
