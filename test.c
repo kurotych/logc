@@ -93,9 +93,48 @@ void test_double_close()
     assert(log_file_close() != 0);
 }
 
+#define OPEN_CLOSE_REPEATS 5000
+void* open_close(void* arg)
+{
+    int* n = (int*)arg;
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(*n, &cpuset);
+
+    for (int i = 0; i < OPEN_CLOSE_REPEATS; i++)
+    {
+        log_file_open(TEST_FILE_PATH);
+        log_file_close();
+    }
+
+    return NULL;
+}
+
+void test_concurrency_open_close()
+{
+    pthread_t thread1, thread2;
+    int num0 = 0, num1 = 1;
+
+    pthread_create(&thread1, NULL, open_close, &num0);
+    pthread_create(&thread2, NULL, open_close, &num1);
+
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+}
+
 int main()
 {
     log_level_set(LOG_LEVEL_TRACE);
+
+    test_open_close();
+    test_file_write();
+    test_concurrency_log();
+    test_double_open();
+    test_double_close();
+    test_concurrency_open_close();
+
+    log_trace("TRACE %s", "TEST");
+    log_debug("Number %d", 33);
     log_trace("TRACE");
     log_debug("DEBUG");
     log_info("INFO");
@@ -103,12 +142,6 @@ int main()
     log_error("ERR");
     log_trace(NULL);
     log_debug("%s", NULL);
-
-    test_open_close();
-    test_file_write();
-    test_concurrency_log();
-    test_double_open();
-    test_double_close();
 
     log_info("All tests are passed");
 }

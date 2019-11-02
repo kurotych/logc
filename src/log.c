@@ -43,9 +43,11 @@ static const char* level_colors[] = {"\x1b[94m", "\x1b[36m", "\x1b[32m",
 
 int log_file_open(const char* file_path)
 {
+    pthread_mutex_lock(&mutex);
     if (fd != NULL)
     {
         fprintf(stderr, "The log file is already opened\n");
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 
@@ -53,21 +55,26 @@ int log_file_open(const char* file_path)
     if (fd == NULL)
     {
         fprintf(stderr, "Can't open log file %s\n", file_path);
+        pthread_mutex_unlock(&mutex);
         return -2;
     }
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
 
 int log_file_close()
 {
+    pthread_mutex_lock(&mutex);
     if (fd == NULL)
     {
         fprintf(stderr, "Log file already closed\n");
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 
     int ret = fclose(fd);
     fd = NULL;
+    pthread_mutex_unlock(&mutex);
     return ret;
 }
 
