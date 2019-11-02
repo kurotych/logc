@@ -80,9 +80,7 @@ int log_file_close()
 
 void log_multithreading(bool enable)
 {
-    pthread_mutex_lock(&mutex);
     multitreading = enable;
-    pthread_mutex_unlock(&mutex);
 }
 
 void log_level_set(int lvl)
