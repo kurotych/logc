@@ -9,6 +9,10 @@
 #ifndef LOG_H
 #define LOG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -43,5 +47,9 @@ void log_quiet_set(bool enable);
 // Multithreaded mode is enabled by default
 // Set false only if your program is single threaded.
 void log_multithreading(bool enable);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

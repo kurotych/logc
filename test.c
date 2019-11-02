@@ -1,4 +1,7 @@
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include "src/log.h"
 #include <assert.h>
 #include <pthread.h>
@@ -86,7 +89,7 @@ void test_double_open()
 void test_double_close()
 {
     log_file_open(TEST_FILE_PATH);
-    log_file_close(TEST_FILE_PATH);
+    log_file_close();
     assert(log_file_close() != 0);
 }
 
