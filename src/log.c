@@ -94,13 +94,12 @@ void log_quiet_set(bool enable)
 
 void log_log(int lvl, const char* file, int line, const char* fmt, ...)
 {
-    if (multitreading) pthread_mutex_lock(&mutex);
-
     if (lvl < level)
     {
         return;
     }
 
+    if (multitreading) pthread_mutex_lock(&mutex);
     /* Get current time */
     time_t t = time(NULL);
     struct tm* lt = localtime(&t);
