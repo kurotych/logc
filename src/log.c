@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2017 rxi
+ * Copyright (c) 2019 Anatolii Kurotych
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -20,117 +21,102 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+#include <pthread.h>
 #include <time.h>
 
 #include "log.h"
 
-static struct {
-  void *udata;
-  log_LockFn lock;
-  FILE *fp;
-  int level;
-  int quiet;
-} L;
+// Default settings
+static FILE* fd = NULL;
+static int level = LOG_DEBUG;
+static bool quiet = false;
+static bool multitreading = true;
 
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static const char *level_names[] = {
-  "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"
-};
+static const char* level_names[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
-#ifdef LOG_USE_COLOR
-static const char *level_colors[] = {
-  "\x1b[94m", "\x1b[36m", "\x1b[32m", "\x1b[33m", "\x1b[31m", "\x1b[35m"
-};
+#ifndef LOG_NO_USE_COLOR
+static const char* level_colors[] = {"\x1b[94m", "\x1b[36m", "\x1b[32m",
+                                     "\x1b[33m", "\x1b[31m", "\x1b[35m"};
 #endif
 
-
-static void lock(void)   {
-  if (L.lock) {
-    L.lock(L.udata, 1);
-  }
+void log_multithreading(bool enable) {
+    pthread_mutex_lock(&mutex);
+    multitreading = enable;
+    pthread_mutex_unlock(&mutex);
 }
 
-
-static void unlock(void) {
-  if (L.lock) {
-    L.lock(L.udata, 0);
-  }
+int log_file_open(const char* file_path)
+{
+    fd = fopen(file_path, "a");
+    if (fd == NULL)
+    {
+        fprintf(stderr, "Can't open log file %s\n", file_path);
+        return -1;
+    }
+    return 0;
 }
 
-
-void log_set_udata(void *udata) {
-  L.udata = udata;
+int log_file_close()
+{
+    int ret = 0;
+    if (fd != NULL) {
+        ret = fclose(fd);
+        fd = NULL;
+    }
+    return ret;
 }
 
+void log_level_set(int lvl) { level = lvl; }
 
-void log_set_lock(log_LockFn fn) {
-  L.lock = fn;
-}
+void log_quiet_set(bool enable) { quiet = enable; }
 
+void log_log(int lvl, const char* file, int line, const char* fmt, ...)
+{
+    if (lvl < level)
+    {
+        return;
+    }
 
-void log_set_fp(FILE *fp) {
-  L.fp = fp;
-}
+    if(multitreading) pthread_mutex_lock(&mutex);
 
+    /* Get current time */
+    time_t t = time(NULL);
+    struct tm* lt = localtime(&t);
 
-void log_set_level(int level) {
-  L.level = level;
-}
-
-
-void log_set_quiet(int enable) {
-  L.quiet = enable ? 1 : 0;
-}
-
-
-void log_log(int level, const char *file, int line, const char *fmt, ...) {
-  if (level < L.level) {
-    return;
-  }
-
-  /* Acquire lock */
-  lock();
-
-  /* Get current time */
-  time_t t = time(NULL);
-  struct tm *lt = localtime(&t);
-
-  /* Log to stderr */
-  if (!L.quiet) {
-    va_list args;
-    char buf[16];
-    buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
-#ifdef LOG_USE_COLOR
-    fprintf(
-      stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ",
-      buf, level_colors[level], level_names[level], file, line);
+    /* Log to stderr */
+    if (!quiet)
+    {
+        va_list args;
+        char buf[16];
+        buf[strftime(buf, sizeof(buf), "%H:%M:%S", lt)] = '\0';
+#ifndef LOG_NO_USE_COLOR
+        fprintf(stderr, "%s %s%-5s\x1b[0m \x1b[90m%s:%d:\x1b[0m ", buf,
+                level_colors[lvl], level_names[lvl], file, line);
 #else
-    fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
+        fprintf(stderr, "%s %-5s %s:%d: ", buf, level_names[lvl], file, line);
 #endif
-    va_start(args, fmt);
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    fprintf(stderr, "\n");
-    fflush(stderr);
-  }
+        va_start(args, fmt);
+        vfprintf(stderr, fmt, args);
+        va_end(args);
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
 
-  /* Log to file */
-  if (L.fp) {
-    va_list args;
-    char buf[32];
-    buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", lt)] = '\0';
-    fprintf(L.fp, "%s %-5s %s:%d: ", buf, level_names[level], file, line);
-    va_start(args, fmt);
-    vfprintf(L.fp, fmt, args);
-    va_end(args);
-    fprintf(L.fp, "\n");
-    fflush(L.fp);
-  }
+    /* Log to file */
+    if (fd)
+    {
+        va_list args;
+        char buf[32];
+        buf[strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", lt)] = '\0';
+        fprintf(fd, "%s %-5s %s:%d: ", buf, level_names[lvl], file, line);
+        va_start(args, fmt);
+        vfprintf(fd, fmt, args);
+        va_end(args);
+        fprintf(fd, "\n");
+        fflush(fd);
+    }
 
-  /* Release lock */
-  unlock();
+    if(multitreading) pthread_mutex_unlock(&mutex);
 }
