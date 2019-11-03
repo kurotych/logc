@@ -17,16 +17,14 @@ extern "C" {
 #include <stdbool.h>
 #include <stdio.h>
 
-#define LOG_VERSION "0.1.2"
-
 enum
 {
-    LOG_LEVEL_TRACE,
-    LOG_LEVEL_DEBUG,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_WARN,
+    LOG_LEVEL_FATAL,
     LOG_LEVEL_ERROR,
-    LOG_LEVEL_FATAL
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_TRACE
 };
 
 #define log_trace(...) log_log(LOG_LEVEL_TRACE, __FILE__, __LINE__, __VA_ARGS__)

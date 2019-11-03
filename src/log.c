@@ -34,11 +34,11 @@ static bool multitreading = true;
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static const char* level_names[] = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
+static const char* level_names[] = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 
 #ifndef LOG_NO_USE_COLOR
-static const char* level_colors[] = {"\x1b[94m", "\x1b[36m", "\x1b[32m",
-                                     "\x1b[33m", "\x1b[31m", "\x1b[35m"};
+static const char* level_colors[] = {"\x1b[35m", "\x1b[31m", "\x1b[33m",
+                                     "\x1b[32m", "\x1b[36m", "\x1b[94m"};
 #endif
 
 int log_file_open(const char* file_path)
@@ -78,10 +78,7 @@ int log_file_close()
     return ret;
 }
 
-void log_multithreading(bool enable)
-{
-    multitreading = enable;
-}
+void log_multithreading(bool enable) { multitreading = enable; }
 
 void log_level_set(int lvl)
 {
@@ -99,7 +96,7 @@ void log_quiet_set(bool enable)
 
 void log_log(int lvl, const char* file, int line, const char* fmt, ...)
 {
-    if (lvl < level)
+    if (lvl > level)
     {
         return;
     }
